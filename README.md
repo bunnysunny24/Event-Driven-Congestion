@@ -1,14 +1,14 @@
 # 🚦 ACORP: ASTraM Congestion Optimizer & Resource Planner
 
-ACORP is a state-of-the-art, AI-driven traffic intelligence prototype designed for **Flipkart Gridlock Hackathon 2.0 (Round 2)**. It addresses the challenge of **Event-Driven Traffic Congestion (Planned & Unplanned)** in Bengaluru by forecasting traffic impacts, optimizing officer deployments using Linear Programming, and calculating dynamic route diversions.
+ACORP is a state-of-the-art, AI-driven traffic intelligence prototype designed for the **Flipkart Gridlock Hackathon 2.0 (Round 2)**. It addresses the challenges of **Event-Driven Traffic Congestion (Planned & Unplanned)** in Bengaluru by forecasting traffic impacts, optimizing officer deployments using Linear Programming, and calculating dynamic route diversions.
 
 Developed in collaboration with insights from the **Bengaluru Traffic Police (BTP) ASTraM** framework.
 
 ---
 
 ## 🚀 Live Demo & Deployment
+*   **Live App Demo**: [https://event-driven-congestion-oucttjnxbbiiwxshm8jwjr.streamlit.app/](https://event-driven-congestion-oucttjnxbbiiwxshm8jwjr.streamlit.app/)
 *   **GitHub Repository**: [https://github.com/bunnysunny24/Event-Driven-Congestion.git](https://github.com/bunnysunny24/Event-Driven-Congestion.git)
-*   **Live App Demo**: *Deploying the app to Streamlit Cloud is free and recommended. See the [Hosting Guide](#-hosting-guide-streamlit-community-cloud) below.*
 
 ---
 
@@ -54,29 +54,51 @@ Bengaluru's arterial road network is modeled as a directed corridor network $G =
 
 ---
 
-## 🌟 Key Application Pages
+## 🌟 Key Application Pages & Walkthrough
 
 ### 1. 📊 Historical Incident Explorer
 *   **3D Geospatial Density Maps**: Interactive 3D Pydeck Hexagon maps showing historical event density and bottlenecks across Bangalore's major corridors.
 *   **Folium Map Markers**: Detailed, color-coded markers for individual incidents (accidents, waterlogging, VIP movements).
 *   **Temporal Heatmaps**: Peak hour vs. day-of-week incident occurrence matrix.
 
+![3D Density Map](Images/Screenshot%202026-06-16%20151759.png)
+![Historical Charts](Images/Screenshot%202026-06-16%20151813.png)
+
+---
+
 ### 2. 🔮 ML Congestion Forecaster
 *   **Specifications Form**: Inputs event details (type, cause, priority, expected date/time, corridor).
 *   **Quantified Advisory**: Displays predicted score (1-10) with BTP operational guidelines (e.g. low impact vs. critical high impact requiring immediate diversion activation).
+*   **XGBoost Explainability**: Interpretable feature importances detailing which variables drive the prediction.
+
+![Model Setup & Explainability](Images/Screenshot%202026-06-16%20151826.png)
+![Prediction Results](Images/Screenshot%202026-06-16%20151841.png)
+
+---
 
 ### 3. 👮 Manpower & Barricade Optimizer
 *   **Optimization Run**: Outputs the PuLP-solved optimal officer allocation matrix.
 *   **Visual Dispatch Map**: Renders lines between stations and junctions indicating personnel movement paths.
 *   **Barricading suggestions**: Recommends locations for protective barricades.
 
+![Manpower Allocation Matrix](Images/Screenshot%202026-06-16%20151854.png)
+![Manpower Allocation Map](Images/Screenshot%202026-06-16%20151904.png)
+
+---
+
 ### 4. 🗺️ Traffic Diversion Planner
 *   **Rerouting Simulation**: Renders the primary path (dashed orange) vs the diversion path (solid green) avoiding the congested corridor (solid red).
+
+![Rerouting Planner](Images/Screenshot%202026-06-16%20151917.png)
+
+---
 
 ### 5. 📈 Post-Event Learning (Feedback Loop)
 *   **Debrief Logger**: Officers enter actual event outcomes (duration, actual congestion index).
 *   **Drift Detection**: Alerts when Mean Absolute Error (MAE) of predictions drifts above a threshold of 0.8.
 *   **Model Retraining**: Trigger retraining of the XGBoost model on the new data buffer to adapt predictions to new traffic patterns.
+
+![Feedback Loop & Drift Retraining](Images/Screenshot%202026-06-16%20151929.png)
 
 ---
 
