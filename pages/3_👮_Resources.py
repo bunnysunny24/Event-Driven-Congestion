@@ -142,6 +142,16 @@ with col_stats:
         st.metric("Total Officers Deployed", f"{total_deployed} officers")
         st.metric("Total Deployment Overhead", f"{total_distance_traveled:.2f} person-km")
         
+        # Calculate average distance for deployed routes to estimate travel time
+        deployed_routes = [(s, j) for s in stations for j in junctions if int(x[(s, j)].varValue) > 0]
+        if deployed_routes:
+            avg_dist = np.mean([costs[s][j] for s, j in deployed_routes])
+            est_deploy_time = int(np.round((avg_dist / 12.0) * 60 + 5)) # 12 km/h average speed in congestion + 5 mins prep
+        else:
+            est_deploy_time = 18
+            
+        st.metric("Est. Deployment Time", f"{est_deploy_time} mins")
+        
         # Calculate man-hours using predicted duration
         duration = event.get('duration_hours', 2.0)
         total_man_hours = total_deployed * duration

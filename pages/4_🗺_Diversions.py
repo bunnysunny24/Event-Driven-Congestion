@@ -133,12 +133,20 @@ col_stats, col_desc = st.columns([1.0, 1.2])
 with col_stats:
     st.markdown("#### ⚡ Route Comparison")
     
+    # Calculate delayed normal path time
+    if len(normal_path) > 1:
+        delayed_normal_time = sum(G[normal_path[i]][normal_path[i+1]]['travel_time'] for i in range(len(normal_path)-1))
+    else:
+        delayed_normal_time = normal_time
+        
+    time_saved = delayed_normal_time - diverted_time if not paths_identical else 0
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"""
         <div class='custom-card' style='border-left: 4px solid #EF4444;'>
-            <div style='color: #EF4444; font-weight:700;'>PRIMARY ROUTE</div>
-            <div style='font-size: 1.8rem; font-weight: 800; color: #FFFFFF;'>{normal_time:.1f} <span style='font-size: 0.9rem;'>mins</span></div>
+            <div style='color: #EF4444; font-weight:700; font-size: 0.8rem; letter-spacing: 0.5px;'>WITHOUT DIVERSION</div>
+            <div style='font-size: 1.8rem; font-weight: 800; color: #FFFFFF;'>{delayed_normal_time:.1f} <span style='font-size: 0.9rem;'>mins</span></div>
             <div style='font-size: 0.9rem; color: #8A99AD;'>Distance: {normal_dist:.1f} km</div>
         </div>
         """, unsafe_allow_html=True)
@@ -146,22 +154,23 @@ with col_stats:
     with col2:
         # Check if diversion is better or identical
         div_color = "#10B981" if not paths_identical else "#EF4444"
-        div_label = "RECOMMENDED DIVERSION" if not paths_identical else "NO ALTERNATIVE ROUTE"
+        div_label = "WITH DIVERSION" if not paths_identical else "NO ALTERNATIVE ROUTE"
         st.markdown(f"""
         <div class='custom-card' style='border-left: 4px solid {div_color};'>
-            <div style='color: {div_color}; font-weight:700;'>{div_label}</div>
+            <div style='color: {div_color}; font-weight:700; font-size: 0.8rem; letter-spacing: 0.5px;'>{div_label}</div>
             <div style='font-size: 1.8rem; font-weight: 800; color: #FFFFFF;'>{diverted_time:.1f} <span style='font-size: 0.9rem;'>mins</span></div>
             <div style='font-size: 0.9rem; color: #8A99AD;'>Distance: {diverted_dist:.1f} km</div>
         </div>
         """, unsafe_allow_html=True)
         
     if not paths_identical:
-        time_saved = normal_time * congestion_factor - diverted_time # Approximate delay on normal path vs diversion path
-        # If normal path goes through the blocked road, its actual delayed time would be:
-        delayed_normal_time = sum(G[normal_path[i]][normal_path[i+1]]['travel_time'] for i in range(len(normal_path)-1))
-        time_saved = delayed_normal_time - diverted_time
-        
-        st.success(f"🎯 **Diversion Rerouting saves ~{time_saved:.1f} minutes** in travel delays by avoiding the congested corridor **{data_b['name']}**.")
+        st.markdown(f"""
+        <div style='background-color: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; border-radius: 8px; padding: 0.8rem; margin-top: 1rem; text-align: center;'>
+            <div style='color: #10B981; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;'>Travel Time Saved</div>
+            <div style='font-size: 2.2rem; font-weight: 800; color: #10B981;'>{time_saved:.1f} mins</div>
+            <div style='color: #8A99AD; font-size: 0.85rem; margin-top: 0.2rem;'>By dynamically rerouting away from the congested corridor <strong>{data_b['name']}</strong></div>
+        </div>
+        """, unsafe_allow_html=True)
 
 with col_desc:
     st.markdown("#### 📋 Route Directions")

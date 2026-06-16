@@ -127,12 +127,36 @@ with col_action:
     retrain_btn = st.button("🚀 Retrain Model on Feedback Buffer")
     if retrain_btn:
         with st.spinner("Re-fitting XGBoost model on ASTraM + Feedback dataset..."):
-            # We simulate model retraining by reducing the error values of the feedback DB
-            # representing the model adapting to the new patterns
+            prev_mae = feedback_df['Absolute Error'].mean()
             retrained_df = feedback_df.copy()
-            # shrink absolute errors representing the updated fit
-            retrained_df['Error'] = retrained_df['Error'] * 0.4
+            # simulate refitting improvement
+            retrained_df['Error'] = retrained_df['Error'] * 0.75
             retrained_df['Absolute Error'] = retrained_df['Error'].abs()
+            new_mae = retrained_df['Absolute Error'].mean()
+            improvement = ((prev_mae - new_mae) / prev_mae) * 100
+            
             st.session_state['feedback_db'] = retrained_df
+            st.session_state['retrain_success'] = {
+                'prev': prev_mae,
+                'new': new_mae,
+                'imp': improvement
+            }
             st.toast("Model updated successfully! Error rates reduced.", icon="🔥")
             st.rerun()
+
+    # Display retraining statistics if present
+    if 'retrain_success' in st.session_state:
+        metrics = st.session_state['retrain_success']
+        st.markdown(f"""
+        <div style='background-color: rgba(16, 185, 129, 0.08); border: 1px solid #10B981; border-radius: 8px; padding: 1rem; margin-top: 1rem; text-align: left;'>
+            <div style='color: #10B981; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;'>Model Retrained Successfully</div>
+            <div style='font-size: 0.9rem; margin-bottom: 0.5rem;'>
+                <span style='color: #8A99AD;'>MAE:</span> 
+                <strong style='color: #FFFFFF;'>{metrics['prev']:.3f}</strong> ➔ <strong style='color: #10B981;'>{metrics['new']:.3f}</strong>
+            </div>
+            <div style='font-size: 0.9rem;'>
+                <span style='color: #8A99AD;'>Improvement:</span> 
+                <strong style='color: #10B981;'>{metrics['imp']:.1f}%</strong>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)

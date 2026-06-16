@@ -167,4 +167,26 @@ pg_diversions = st.Page("pages/4_🗺_Diversions.py", title="Traffic Diversion",
 pg_learning = st.Page("pages/5_📈_Post_Event_Learning.py", title="Feedback Loop", icon="📈")
 
 pg = st.navigation([pg_explorer, pg_forecast, pg_resources, pg_diversions, pg_learning])
+
+# Shared sidebar content (renders across all pages)
+with st.sidebar:
+    st.markdown("### 🚦 ACORP Decision Pipeline")
+    st.markdown("""
+    <div style='background-color: #121824; border: 1px solid #1E293B; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; line-height: 1.4; color: #8A99AD;'>
+    &nbsp;&nbsp;Historical Data<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    &nbsp;&nbsp;XGBoost Prediction<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    &nbsp;&nbsp;Resource Opt (PuLP)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    &nbsp;&nbsp;Diversions (NetworkX)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    &nbsp;&nbsp;Feedback Learning<br>
+    </div>
+    """, unsafe_allow_html=True)
+
 pg.run()
