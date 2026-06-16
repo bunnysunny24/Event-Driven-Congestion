@@ -1,62 +1,99 @@
 # 🚦 ACORP: ASTraM Congestion Optimizer & Resource Planner
 
-ACORP is a state-of-the-art, AI-driven traffic intelligence prototype designed for **Flipkart Gridlock Hackathon 2.0 (Round 2)**. It solves the challenges of **Event-Driven Traffic Congestion (Planned & Unplanned)** in Bengaluru by forecasting traffic impacts, optimizing officer deployments using Linear Programming, and calculating dynamic route diversions.
+ACORP is a state-of-the-art, AI-driven traffic intelligence prototype designed for **Flipkart Gridlock Hackathon 2.0 (Round 2)**. It addresses the challenge of **Event-Driven Traffic Congestion (Planned & Unplanned)** in Bengaluru by forecasting traffic impacts, optimizing officer deployments using Linear Programming, and calculating dynamic route diversions.
 
 Developed in collaboration with insights from the **Bengaluru Traffic Police (BTP) ASTraM** framework.
 
 ---
 
-## 🌟 Key Features
+## 🚀 Live Demo & Deployment
+*   **GitHub Repository**: [https://github.com/bunnysunny24/Event-Driven-Congestion.git](https://github.com/bunnysunny24/Event-Driven-Congestion.git)
+*   **Live App Demo**: *Deploying the app to Streamlit Cloud is free and recommended. See the [Hosting Guide](#-hosting-guide-streamlit-community-cloud) below.*
+
+---
+
+## 🧠 The AI, ML & Optimization Core
+
+This prototype integrates multiple advanced computational methods to solve traffic gridlocks:
+
+### 1. Predictive Engine (XGBoost Regressor)
+To quantify **Event Impact in Advance**, we train an **XGBoost Regressor** on **8,171 historical ASTraM incidents**.
+*   **Features Modeled**: Event Type (Planned/Unplanned), Event Cause, Affected Corridor, Affected Zone, Priority level, Road Closure requirements, Hour of Day, and Day of Week.
+*   **Target Variable**: A calculated **Congestion Impact Score (1-10)** mapped from historical priority levels, causes, and road closures.
+*   **Explainable AI**: The system uses model feature importance rankings to give operators clear insights into *why* a particular event is predicted to cause a certain congestion level.
+
+### 2. Manpower Allocation (Integer Linear Programming)
+Rather than relying on experience-driven deployment, we model officer allocation from nearby Police Stations (Sources) to congested Junctions (Sinks) as a **Transportation Optimization Problem** solved via **Mixed Integer Linear Programming (MILP)** using `PuLP`:
+
+$$
+\text{Minimize } \sum_{s \in S} \sum_{j \in J} d_{s,j} \cdot x_{s,j}
+$$
+
+**Subject to:**
+1.  **Junction Coverage Constraints**: The sum of officers allocated to a junction must meet the dynamic requirement (which scales based on the predicted Congestion Impact Score and road-closure requirements):
+    $$
+    \sum_{s \in S} x_{s,j} \ge \text{ScaledRequirement}_j \quad \forall j \in J
+    $$
+2.  **Station Capacity Constraints**: The number of officers drawn from a station cannot exceed its capacity:
+    $$
+    \sum_{j \in J} x_{s,j} \le \text{Capacity}_s \quad \forall s \in S
+    $$
+3.  **Integrity Constraints**: Officers must be deployed in whole numbers:
+    $$
+    x_{s,j} \in \mathbb{Z}^+ \quad \forall s \in S, j \in J
+    $$
+
+### 3. Dynamic Rerouting (Graph Theory & Dijkstra's Algorithm)
+Bengaluru's arterial road network is modeled as a directed corridor network $G = (V, E)$ using `NetworkX`. 
+*   When an event requires lane closures or causes high congestion, a **Congestion Delay Penalty** $\alpha$ (input via slider) is dynamically applied to the edge weight representing that corridor.
+*   The system calculates the alternative path minimizing travel time:
+    $$
+    w_{\text{delayed}}(u, v) = w_{\text{base}}(u, v) \cdot \alpha
+    $$
+*   Dijkstra's shortest path algorithm computes both the standard route and the diversion route, overlaying both on an interactive map.
+
+---
+
+## 🌟 Key Application Pages
 
 ### 1. 📊 Historical Incident Explorer
-*   **3D Geospatial Density Maps**: Interactive 3D Pydeck Hexagon maps showing event density and bottlenecks across Bangalore's major corridors.
-*   **Marker Visualizations**: Folium map showing detailed, color-coded markers for individual historical incidents (accidents, breakdowns, waterlogging, public events).
-*   **Temporal Analytics**: Plotly heatmaps highlighting peak days and hours of traffic disruptions.
+*   **3D Geospatial Density Maps**: Interactive 3D Pydeck Hexagon maps showing historical event density and bottlenecks across Bangalore's major corridors.
+*   **Folium Map Markers**: Detailed, color-coded markers for individual incidents (accidents, waterlogging, VIP movements).
+*   **Temporal Heatmaps**: Peak hour vs. day-of-week incident occurrence matrix.
 
 ### 2. 🔮 ML Congestion Forecaster
-*   **XGBoost Predictive Engine**: Trained on 8,173 ASTraM incidents to forecast a quantified **Congestion Impact Score (1-10)** in advance.
-*   **Explainable AI**: Real-time feature importance charts indicating which features (corridor, priority, cause, road-closures) drive traffic impacts.
-*   **Advisory Generation**: Dynamic warnings and operational recommendations based on predicted impact thresholds.
+*   **Specifications Form**: Inputs event details (type, cause, priority, expected date/time, corridor).
+*   **Quantified Advisory**: Displays predicted score (1-10) with BTP operational guidelines (e.g. low impact vs. critical high impact requiring immediate diversion activation).
 
 ### 3. 👮 Manpower & Barricade Optimizer
-*   **Integer Linear Programming (ILP)**: Formulated with `PuLP` to minimize transit overhead (person-kilometers) while guaranteeing coverage at affected junctions.
-*   **Allocation Matrix**: Automatic computation of police personnel assignments from 5 nearby stations to 5 target junctions.
-*   **Visual Dispatch Map**: Displays deployment paths and recommends optimal spots for barricading.
+*   **Optimization Run**: Outputs the PuLP-solved optimal officer allocation matrix.
+*   **Visual Dispatch Map**: Renders lines between stations and junctions indicating personnel movement paths.
+*   **Barricading suggestions**: Recommends locations for protective barricades.
 
 ### 4. 🗺️ Traffic Diversion Planner
-*   **Corridor Graph Network**: Modeled using `NetworkX` representing major Bengaluru arterial corridors.
-*   **Dynamic Rerouting**: Simulates lane closures by applying congestion penalties, computing alternative routes side-by-side with original routes.
-*   **Route Comparison**: Maps primary (dashed orange) vs diversion (solid green) paths.
+*   **Rerouting Simulation**: Renders the primary path (dashed orange) vs the diversion path (solid green) avoiding the congested corridor (solid red).
 
 ### 5. 📈 Post-Event Learning (Feedback Loop)
-*   **Operational Debrief Form**: Allows officers to log actual outcomes (duration, congestion index, effectiveness) after an event.
-*   **Performance Tracking**: Computes error metrics (MAE/RMSE) over time to monitor model accuracy.
-*   **Drift Retraining**: Simulates model updates to adapt to changing city patterns.
+*   **Debrief Logger**: Officers enter actual event outcomes (duration, actual congestion index).
+*   **Drift Detection**: Alerts when Mean Absolute Error (MAE) of predictions drifts above a threshold of 0.8.
+*   **Model Retraining**: Trigger retraining of the XGBoost model on the new data buffer to adapt predictions to new traffic patterns.
 
 ---
 
-## 🛠️ Tech Stack
-
-*   **Frontend**: Streamlit (Premium Dark Theme)
-*   **Machine Learning**: XGBoost, Scikit-learn
-*   **Optimization**: PuLP (Mixed Integer Linear Programming)
-*   **Network & Graphs**: NetworkX
-*   **Maps & Geospatial**: Pydeck, Folium, Streamlit-Folium, GeoPandas, PyProj, Shapely
-*   **Analytics**: Plotly Express, Pandas, NumPy
-
----
-
-## 🚀 Installation & Running Guide
+## 🛠️ Installation & Running Guide
 
 ### 1. Prerequisites
-Ensure you have Python 3.9+ installed.
+*   Python 3.9 - 3.11 installed.
 
-### 2. Clone the repository and install dependencies
+### 2. Installation
+Clone the repository and install the dependencies:
 ```bash
+git clone https://github.com/bunnysunny24/Event-Driven-Congestion.git
+cd Event-Driven-Congestion
 pip install -r requirements.txt
 ```
 
-### 3. Run the Streamlit Application
+### 3. Run Locally
 ```bash
 streamlit run app.py
 ```
@@ -64,31 +101,16 @@ Open `http://localhost:8501` in your browser.
 
 ---
 
-## 🧠 System Architecture
+## 🌐 Hosting Guide: Streamlit Community Cloud
 
-```
-                      +-----------------------------+
-                      |     ASTraM Event Dataset    |
-                      +--------------+--------------+
-                                     |
-                                     v
-                       +-------------+-------------+
-                       |    XGBoost Forecaster     |
-                       +-------------+-------------+
-                                     |
-                                     v (Congestion Index)
-                       +-------------+-------------+
-                       |  PuLP LP Resource Engine  |
-                       +-------------+-------------+
-                                     |
-                                     v (Allocations & Routes)
-                      +--------------+--------------+
-                      |   NetworkX Diversion Graph  |
-                      +--------------+--------------+
-                                     |
-                                     v
-                      +--------------+--------------+
-                      | Streamlit Interactive Map &  |
-                      |      Feedback Database      |
-                      +-----------------------------+
-```
+Hosting the prototype is **free** and takes less than 2 minutes. Follow these steps to deploy:
+
+1.  Go to [Streamlit Community Cloud](https://share.streamlit.io/) and click **Sign Up** (use your GitHub account).
+2.  Once logged in, click the **New App** button in the top right.
+3.  Fill in the deployment details:
+    *   **Repository**: `bunnysunny24/Event-Driven-Congestion`
+    *   **Branch**: `main`
+    *   **Main file path**: `app.py`
+4.  Click **Deploy!**
+
+Your app will be built and accessible via a public `https://<your-app-name>.streamlit.app` URL, which you can share with the judges.
