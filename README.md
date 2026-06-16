@@ -12,14 +12,44 @@ Developed in collaboration with insights from the **Bengaluru Traffic Police (BT
 
 ---
 
-## 🧠 The AI, ML & Optimization Core
+## 📖 BTP ASTraM Operational Context
+Under the current Bengaluru Traffic Police (BTP) operations, managing event-driven congestion (such as IPL matches at Chinnaswamy Stadium, political rallies, waterlogging, or sudden VIP movements) is highly experience-driven and reactive. The **ACORP** prototype solves this by providing a proactive planning suite that integrates historical analytics, predictive machine learning, and mathematical optimization:
 
-This prototype integrates multiple advanced computational methods to solve traffic gridlocks:
+```
+                    +------------------------------------+
+                    | BTP ASTraM Event & Incident Ingest |
+                    +-----------------+------------------+
+                                      |
+                                      v
+                    +------------------------------------+
+                    |  XGBoost Congestion Forecast (1-10)|
+                    +-----------------+------------------+
+                                      |
+                                      v (Congestion Index)
+                    +------------------------------------+
+                    | PuLP Integer LP Resource Allocator |
+                    +-----------------+------------------+
+                                      |
+                                      v (Dispatch & Diversions)
+                    +------------------------------------+
+                    | NetworkX Dijkstra Diversion Routing|
+                    +------------------------------------+
+                                      |
+                                      v
+                    +------------------------------------+
+                    | Post-Event Drift Learning Feedback |
+                    +------------------------------------+
+```
+
+---
+
+## 🧠 The AI, ML & Optimization Core
 
 ### 1. Predictive Engine (XGBoost Regressor)
 To quantify **Event Impact in Advance**, we train an **XGBoost Regressor** on **8,171 historical ASTraM incidents**.
 *   **Features Modeled**: Event Type (Planned/Unplanned), Event Cause, Affected Corridor, Affected Zone, Priority level, Road Closure requirements, Hour of Day, and Day of Week.
 *   **Target Variable**: A calculated **Congestion Impact Score (1-10)** mapped from historical priority levels, causes, and road closures.
+*   **Model Performance**: The model achieves a Cross-Validation Mean Absolute Error (MAE) of **`~0.028`** and Root Mean Squared Error (RMSE) of **`~0.073`**.
 *   **Explainable AI**: The system uses model feature importance rankings to give operators clear insights into *why* a particular event is predicted to cause a certain congestion level.
 
 ### 2. Manpower Allocation (Integer Linear Programming)
@@ -99,6 +129,17 @@ Bengaluru's arterial road network is modeled as a directed corridor network $G =
 *   **Model Retraining**: Trigger retraining of the XGBoost model on the new data buffer to adapt predictions to new traffic patterns.
 
 ![Feedback Loop & Drift Retraining](Images/Screenshot%202026-06-16%20151929.png)
+
+---
+
+## 🎬 Suggested Demo Video Walkthrough Flow (For Your Recording)
+When recording your Loom or video submission for the judges, we recommend following this 3-minute script flow:
+
+1.  **Introduction (30s)**: Start on the **Historical Explorer** tab. Show the 3D Pydeck Hexagon map (you can zoom and rotate it live). Briefly mention that the system is built on **8,171 real incidents** from the BTP ASTraM dataset.
+2.  **Congestion Forecasting (45s)**: Navigate to the **Congestion Forecasting** tab. Show the XGBoost model metrics (on the sidebar) and explain feature importance. Type in an event (e.g., a planned VIP movement or construction road closure) and click **Predict**. Point out the resulting Congestion Score and BTP advisory recommendations.
+3.  **Manpower Optimization (45s)**: Navigate to the **Resource Optimizer** tab. Highlight how the system loaded the predicted score you just created. Explain the Integer Linear Programming allocation matrix and the Folium routing paths connecting stations to junctions.
+4.  **Traffic Diversion (45s)**: Navigate to the **Traffic Diversion** tab. Choose a start and end junction. Adjust the delay slider to simulate corridor blockage and show the primary vs diversion paths on the live map.
+5.  **Closing & Continuous Learning (15s)**: Finish on the **Feedback Loop** tab. Show how BTP officers can submit actual outcomes to retrain the model and combat data drift.
 
 ---
 
