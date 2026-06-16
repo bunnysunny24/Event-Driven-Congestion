@@ -160,13 +160,14 @@ if 'df' not in st.session_state:
     st.session_state['df'] = load_astram_data()
 
 # Define navigation structure
+pg_command = st.Page("pages/0_🎮_Command_Center.py", title="Command Center", icon="🎮", default=True)
 pg_explorer = st.Page("pages/1_📊_Explorer.py", title="Historical Explorer", icon="📊")
 pg_forecast = st.Page("pages/2_🔮_Forecasting.py", title="Congestion Forecasting", icon="🔮")
 pg_resources = st.Page("pages/3_👮_Resources.py", title="Resource Optimizer", icon="👮")
 pg_diversions = st.Page("pages/4_🗺_Diversions.py", title="Traffic Diversion", icon="🗺️")
 pg_learning = st.Page("pages/5_📈_Post_Event_Learning.py", title="Feedback Loop", icon="📈")
 
-pg = st.navigation([pg_explorer, pg_forecast, pg_resources, pg_diversions, pg_learning])
+pg = st.navigation([pg_command, pg_explorer, pg_forecast, pg_resources, pg_diversions, pg_learning])
 
 # Shared sidebar content (renders across all pages)
 with st.sidebar:
