@@ -15,10 +15,10 @@ env/
 # Streamlit logs/cache
 .streamlit/runtime/
 
+# IDE
+.vscode/
+.idea/
+
 # Hackathon local logs and artifacts
 .system_generated/
 *.log
-
-# Large datasets
-*.csv
-*.xlsx

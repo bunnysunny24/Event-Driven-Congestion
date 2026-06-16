@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 
 # Page configuration
 st.set_page_config(
@@ -77,7 +78,27 @@ st.markdown("""
 # Load data function (cached)
 @st.cache_data
 def load_astram_data():
-    file_path = r"d:\Bunny\Flipkart_round_2\Astram event data_anonymized - Astram event data_anonymizedb40ac87.csv"
+    # Portable path: look for CSV in the same directory as app.py
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Try to find the CSV file (supports the original long filename or a renamed version)
+    csv_candidates = [f for f in os.listdir(base_dir) if f.endswith('.csv')]
+    if csv_candidates:
+        file_path = os.path.join(base_dir, csv_candidates[0])
+    else:
+        # Check in a 'data' subdirectory as fallback
+        data_dir = os.path.join(base_dir, 'data')
+        if os.path.isdir(data_dir):
+            csv_candidates = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
+            if csv_candidates:
+                file_path = os.path.join(data_dir, csv_candidates[0])
+            else:
+                st.error("No CSV dataset found. Please place the ASTraM CSV file in the project root or a 'data/' folder.")
+                st.stop()
+        else:
+            st.error("No CSV dataset found. Please place the ASTraM CSV file in the project root or a 'data/' folder.")
+            st.stop()
+    
     df = pd.read_csv(file_path)
     
     # 1. Clean datetime columns
