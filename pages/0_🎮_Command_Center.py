@@ -165,7 +165,6 @@ st.markdown(f"""
             <div style='font-size: 0.75rem; color: #8A99AD; margin-top: 0.2rem;'>NetworkX Dijkstra</div>
         </div>
     </div>
-    
     <div style='margin-top: 2rem; background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 1.2rem; text-align: left; border-left: 4px solid {status_color};'>
         <div style='font-size: 0.8rem; color: #8A99AD; text-transform: uppercase; font-weight: 700;'>🚨 BTP Control Room Advisory</div>
         <div style='font-size: 1.2rem; font-weight: 700; color: #FFFFFF; margin-top: 0.3rem;'>{advisory} Advisory Active</div>
