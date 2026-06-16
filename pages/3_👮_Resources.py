@@ -142,6 +142,11 @@ with col_stats:
         st.metric("Total Officers Deployed", f"{total_deployed} officers")
         st.metric("Total Deployment Overhead", f"{total_distance_traveled:.2f} person-km")
         
+        # Calculate man-hours using predicted duration
+        duration = event.get('duration_hours', 2.0)
+        total_man_hours = total_deployed * duration
+        st.metric("Total Personnel Effort", f"{total_man_hours:.1f} officer-hours ({duration} hrs)")
+        
         # Barricading requirements
         num_barricades = int(np.ceil(event['impact_score'] * 4.0))
         st.metric("Recommended Barricades Deployed", f"{num_barricades} units")

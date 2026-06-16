@@ -35,16 +35,19 @@ def train_forecasting_model(data):
     encoder = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
     train_df[cat_cols] = encoder.fit_transform(train_df[cat_cols])
     
-    # Define features and target
+    # Define features and targets
     features = cat_cols + ['requires_road_closure', 'hour', 'day_of_week']
     X = train_df[features]
-    y = train_df['congestion_impact']
+    y_impact = train_df['congestion_impact']
+    y_duration = train_df['duration_hours']
     
-    # Split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Split for impact
+    X_train_i, X_test_i, y_train_i, y_test_i = train_test_split(X, y_impact, test_size=0.2, random_state=42)
+    # Split for duration
+    X_train_d, X_test_d, y_train_d, y_test_d = train_test_split(X, y_duration, test_size=0.2, random_state=42)
     
-    # Train XGBoost
-    model = xgb.XGBRegressor(
+    # Train XGBoost for impact
+    model_i = xgb.XGBRegressor(
         n_estimators=100,
         learning_rate=0.08,
         max_depth=6,
@@ -52,31 +55,47 @@ def train_forecasting_model(data):
         colsample_bytree=0.8,
         random_state=42
     )
-    model.fit(X_train, y_train)
+    model_i.fit(X_train_i, y_train_i)
     
-    # Metrics
-    preds = model.predict(X_test)
-    mae = mean_absolute_error(y_test, preds)
-    rmse = np.sqrt(mean_squared_error(y_test, preds))
+    # Train XGBoost for duration
+    model_d = xgb.XGBRegressor(
+        n_estimators=100,
+        learning_rate=0.08,
+        max_depth=6,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42
+    )
+    model_d.fit(X_train_d, y_train_d)
+    
+    # Metrics impact
+    preds_i = model_i.predict(X_test_i)
+    mae_i = mean_absolute_error(y_test_i, preds_i)
+    rmse_i = np.sqrt(mean_squared_error(y_test_i, preds_i))
+    
+    # Metrics duration
+    preds_d = model_d.predict(X_test_d)
+    mae_d = mean_absolute_error(y_test_d, preds_d)
+    rmse_d = np.sqrt(mean_squared_error(y_test_d, preds_d))
     
     # Feature importance
     importance = pd.DataFrame({
         'Feature': features,
-        'Importance': model.feature_importances_
+        'Importance': model_i.feature_importances_
     }).sort_values(by='Importance', ascending=False)
     
-    return model, encoder, mae, rmse, importance
+    return model_i, model_d, encoder, mae_i, rmse_i, mae_d, rmse_d, importance
 
 # Run training
-with st.spinner("Training predictive model..."):
-    model, encoder, mae, rmse, feat_importance = train_forecasting_model(df)
+with st.spinner("Training predictive models..."):
+    model_i, model_d, encoder, mae_i, rmse_i, mae_d, rmse_d, feat_importance = train_forecasting_model(df)
 
 # Show model health status in the sidebar
 st.sidebar.markdown("---")
 st.sidebar.subheader("⚙️ Model Health Status")
-st.sidebar.markdown(f"**Model Type:** XGBoost Regressor")
-st.sidebar.markdown(f"**Cross-Val MAE:** `{mae:.3f}`")
-st.sidebar.markdown(f"**Cross-Val RMSE:** `{rmse:.3f}`")
+st.sidebar.markdown(f"**Model Type:** XGBoost Regressors")
+st.sidebar.markdown(f"**Congestion MAE:** `{mae_i:.3f}`")
+st.sidebar.markdown(f"**Duration MAE:** `{mae_d:.3f}` hrs")
 st.sidebar.markdown(f"**Dataset size:** `{len(df):,}` rows")
 
 # --- UI LAYOUT ---
@@ -132,8 +151,11 @@ if submit_btn:
     input_data[cat_cols] = encoder.transform(input_data[cat_cols])
     
     # Predict
-    predicted_impact = model.predict(input_data)[0]
+    predicted_impact = model_i.predict(input_data)[0]
     predicted_impact = float(np.clip(predicted_impact, 1.0, 10.0))
+    
+    predicted_duration = model_d.predict(input_data)[0]
+    predicted_duration = float(np.clip(predicted_duration, 0.2, 8.0))
     
     # Store in session state
     st.session_state['last_prediction'] = {
@@ -145,7 +167,8 @@ if submit_btn:
         'zone': evt_zone,
         'road_closure': road_closure,
         'datetime': est_datetime,
-        'impact_score': round(predicted_impact, 1)
+        'impact_score': round(predicted_impact, 1),
+        'duration_hours': round(predicted_duration, 1)
     }
 
 # --- DISPLAY RESULTS ---
@@ -174,7 +197,8 @@ with col_result:
         st.markdown(f"""
         <div style='background-color: #121824; border: 2px solid {status_color}; border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 0 15px rgba({",".join([str(int(status_color[i:i+2], 16)) for i in (1, 3, 5)] if status_color.startswith('#') else '255, 255, 255')}, 0.2);'>
             <div style='font-size: 0.9rem; color: #8A99AD; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;'>Predicted Congestion Index</div>
-            <div style='font-size: 4.5rem; font-weight: 800; color: {status_color}; line-height: 1; margin: 1rem 0;'>{score} <span style='font-size: 1.5rem; font-weight: 400; color: #8A99AD;'>/ 10</span></div>
+            <div style='font-size: 4.5rem; font-weight: 800; color: {status_color}; line-height: 1; margin: 0.5rem 0;'>{score} <span style='font-size: 1.5rem; font-weight: 400; color: #8A99AD;'>/ 10</span></div>
+            <div style='font-size: 1.1rem; color: #8A99AD; margin-bottom: 1.2rem;'>Estimated Clearance: <strong style='color: #FFFFFF;'>{pred.get("duration_hours", 1.0)} hrs</strong></div>
             <div style='background-color: rgba({",".join([str(int(status_color[i:i+2], 16)) for i in (1, 3, 5)] if status_color.startswith('#') else '255, 255, 255')}, 0.1); color: {status_color}; font-weight: 700; display: inline-block; padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 1rem; border: 1px solid {status_color};'>
                 {status_text}
             </div>

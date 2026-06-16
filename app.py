@@ -126,6 +126,11 @@ def load_astram_data():
     df['month'] = df['start_datetime'].dt.month
     df['date'] = df['start_datetime'].dt.date
     
+    # Calculate duration
+    df['duration_hours'] = (df['closed_datetime'] - df['start_datetime']).dt.total_seconds() / 3600.0
+    df['duration_hours'] = df['duration_hours'].fillna(1.0)
+    df['duration_hours'] = df['duration_hours'].clip(lower=0.2, upper=8.0)
+    
     # 3. Congestion impact score construction
     # We will construct a synthetic Congestion Impact Index based on:
     # - Priority: High = 4, Low = 1
