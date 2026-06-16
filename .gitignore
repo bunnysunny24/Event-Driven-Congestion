@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Streamlit logs/cache
+.streamlit/runtime/
+
+# Hackathon local logs and artifacts
+.system_generated/
+*.log
+
+# Large datasets
+*.csv
+*.xlsx
